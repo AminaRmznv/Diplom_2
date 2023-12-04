@@ -8,16 +8,10 @@ class TestOrderCreation:
     @allure.title("Тест создания заказа с аутентификацией")
     @allure.description(
         "Проверка успешного создания заказа при наличии аутентификации пользователя. Ожидается, что заказ будет создан и в ответе будет Success.")
-    def test_create_order_with_authentication_success(self, create_with_auth_and_delete_user):
-        _, access_token = create_with_auth_and_delete_user
+    def test_create_order_with_authentication_success(self, create_and_delete_user, get_ingredients):
+        _, access_token = create_and_delete_user
+        order_data = get_ingredients
         headers = {"Authorization": access_token}
-        ingredients_response = requests.get(URL.list_of_ingredients_api)
-        ingredients_data = ingredients_response.json()["data"]
-        selected_ingredients = [
-            ingredients_data[0]["_id"],
-            ingredients_data[1]["_id"]
-        ]
-        order_data = {"ingredients": selected_ingredients}
         order_response = requests.post(URL.create_order_api, json=order_data, headers=headers)
         assert order_response.status_code == 200
         assert order_response.json()['success'] is True
@@ -26,14 +20,8 @@ class TestOrderCreation:
     @allure.title("Тест создания заказа без аутентификации")
     @allure.description(
         "Проверка создания заказа без аутентификации пользователя")
-    def test_create_order_without_authentication_success(self):
-        ingredients_response = requests.get(URL.list_of_ingredients_api)
-        ingredients_data = ingredients_response.json()["data"]
-        selected_ingredients = [
-            ingredients_data[0]["_id"],
-            ingredients_data[1]["_id"]
-        ]
-        order_data = {"ingredients": selected_ingredients}
+    def test_create_order_without_authentication_success(self, get_ingredients):
+        order_data = get_ingredients
         order_response = requests.post(URL.create_order_api, json=order_data)
         assert 'success' in order_response.text
         assert 'order' in order_response.text
@@ -41,8 +29,8 @@ class TestOrderCreation:
     @allure.title("Тест создания заказа без ингредиентов")
     @allure.description(
         "Проверка ошибки при попытке создания заказа без указания ингредиентов. Ожидается получение статуса ошибки и сообщения об отсутствии ингредиентов.")
-    def test_create_order_without_ingredients_error(self, create_with_auth_and_delete_user):
-        _, access_token = create_with_auth_and_delete_user
+    def test_create_order_without_ingredients_error(self, create_and_delete_user):
+        _, access_token = create_and_delete_user
         headers = {"Authorization": access_token}
         order_data = {"ingredients": []}
         order_response = requests.post(URL.create_order_api, json=order_data, headers=headers)
